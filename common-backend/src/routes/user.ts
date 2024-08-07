@@ -1,10 +1,14 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
+import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
+dotenv.config();
 const router = express.Router();
 const prisma = new PrismaClient();
+const JWT_SECRET=process.env.JWT_SECRET  || "";
 // all routes that serve the customer mobile app
 
-router.get("/signup", async (req, res) => {
+router.post("/signup", async (req, res) => {
   const { name, phoneno, email, password } = req.body;
   try {
     const user = await prisma.user.findFirst({
@@ -15,7 +19,7 @@ router.get("/signup", async (req, res) => {
       },
     });
     if (user) {
-      res.status(409).json({ message: "user already exixts, please login" });
+      res.status(409).json({ message: "User already exixts, please login!" });
       return;
     } else {
       await prisma.user.create({
@@ -26,7 +30,7 @@ router.get("/signup", async (req, res) => {
           password: password,
         },
       });
-      res.status(200).json({ message: "user created successfully" });
+      res.status(200).json({ message: "User created successfully, please login now" });
       return;
     }
   } catch (error) {
@@ -35,5 +39,37 @@ router.get("/signup", async (req, res) => {
     return;
   }
 });
+
+router.post("/login", async (req, res) => {
+    const { email, password } = req.body;
+    try {
+      const user = await prisma.user.findFirst({
+        where: {
+          email: email,
+          password: password
+        },
+      });
+      if (!user) {
+        res.status(409).json({ message: "User donot exist or incorrect password, please signup" });
+        return;
+      } else {
+        const id=user.userId;
+        const userToken=jwt.sign({
+            id
+        },JWT_SECRET);
+
+        res.status(200).json({
+            message:"Login succesfull",
+            userToken: userToken
+        });
+        return;
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "internal server error" });
+      return;
+    }
+  });
+
 
 export default router;
