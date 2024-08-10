@@ -137,9 +137,9 @@ router.post("/start-store-session", (req, res) => {
 });
 
 router.get("/category", async (req, res) => {
-  let category = req.body.category;
-  category=category.toLowerCase();
-  if (!category) {
+  let category = req.body.category  || "";
+  category = category.toLowerCase();
+  if (!category || !category.length) {
     res.status(409).json({
       message: "invalid category",
     });
@@ -148,7 +148,7 @@ router.get("/category", async (req, res) => {
   try {
     const allItems = await prisma.item.findMany({
       where: {
-          category: {has:category}
+        category: { has: category },
       },
       select: {
         itemId: true,
@@ -158,13 +158,56 @@ router.get("/category", async (req, res) => {
         image_url: true,
       },
     });
+    if (!allItems.length) {
+      res.status(409).json({ message: "No such item found" });
+      return;
+    }
     res.status(200).json({
       message: "received data from backend",
       allItems: allItems,
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "error in backend" });
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.get("/search-items", async (req, res) => {
+  const userInput = String(req.body.userInput);
+  if (!userInput || userInput.length == 0) {
+    res.status(409).json({
+      message: "No such items found",
+    });
+    return;
+  }
+  try {
+    const allItems = await prisma.item.findMany({
+      where: {
+        OR: [
+          { name: userInput },
+          { category: { has: userInput } },
+          { keywords: { has: userInput } },
+        ],
+      },
+      select: {
+        itemId: true,
+        name: true,
+        description: true,
+        price: true,
+        image_url:true
+      },
+    });
+    if (!allItems.length) {
+      res.status(409).json({ message: "No such item found" });
+      return;
+    }
+    res.status(200).json({
+      message: "received matched items",
+      allItems: allItems,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
