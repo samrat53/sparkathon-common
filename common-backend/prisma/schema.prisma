@@ -27,6 +27,32 @@ model store{
   state String
   locality String?
   landmark String?
-  pincode BigInt
+  pincode String
   floorCategory String[]
+}
+
+model item{
+  itemId Int @id @default(autoincrement())
+  category String[]
+  name String
+  price Float
+  comparator_platform String[]
+  comparator_price String[]
+  description String
+  item_floor Int
+  item_location String
+  keywords String[]
+  image_url String
+  video_link String
+  questions String[]
+}
+
+model customerRequests{
+  requestId Int @id @default(autoincrement())
+  phone String
+  otp Int
+  status Boolean @default(false)
+  customer_name String
+  storeId Int
+  time DateTime @default(now())
 }
