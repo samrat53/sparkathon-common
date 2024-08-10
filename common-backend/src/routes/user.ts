@@ -118,9 +118,9 @@ router.get("/stores", async (req, res) => {
   }
 });
 
-router.post("/start-store-session", async (req, res) => {
+router.post("/start-store-session", (req, res) => {
   const storeId = String(req.body.storeId);
-  if (!storeId || storeId.length==0) {
+  if (!storeId || storeId.length == 0) {
     res.status(409).json({ message: "storeId not found" });
     return;
   }
@@ -136,6 +136,36 @@ router.post("/start-store-session", async (req, res) => {
   }
 });
 
-
+router.get("/category", async (req, res) => {
+  let category = req.body.category;
+  category=category.toLowerCase();
+  if (!category) {
+    res.status(409).json({
+      message: "invalid category",
+    });
+    return;
+  }
+  try {
+    const allItems = await prisma.item.findMany({
+      where: {
+          category: {has:category}
+      },
+      select: {
+        itemId: true,
+        name: true,
+        price: true,
+        description: true,
+        image_url: true,
+      },
+    });
+    res.status(200).json({
+      message: "received data from backend",
+      allItems: allItems,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "error in backend" });
+  }
+});
 
 export default router;
