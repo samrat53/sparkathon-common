@@ -52,11 +52,9 @@ router.post("/login", async (req, res) => {
       },
     });
     if (!user) {
-      res
-        .status(409)
-        .json({
-          message: "User donot exist or incorrect password, please signup",
-        });
+      res.status(409).json({
+        message: "User donot exist or incorrect password, please signup",
+      });
       return;
     } else {
       const id = user.userId;
@@ -95,6 +93,7 @@ router.get("/stores", async (req, res) => {
         ],
       },
       select: {
+        storeId: true,
         city: true,
         state: true,
         locality: true,
@@ -103,8 +102,8 @@ router.get("/stores", async (req, res) => {
       },
     });
     if (allStores.length === 0) {
-      res.status(404).json({ 
-        message: "No such store found, please change city or state."
+      res.status(404).json({
+        message: "No such store found, please change city or state.",
       });
       return;
     }
@@ -118,5 +117,25 @@ router.get("/stores", async (req, res) => {
     res.status(500).send("Internal Server error");
   }
 });
+
+router.post("/start-store-session", async (req, res) => {
+  const storeId = String(req.body.storeId);
+  if (!storeId || storeId.length==0) {
+    res.status(409).json({ message: "storeId not found" });
+    return;
+  }
+  try {
+    const storeToken = jwt.sign({ storeId }, JWT_SECRET);
+    res.status(200).json({
+      message: "received store token from backend",
+      storeToken: storeToken,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "couldnot create token" });
+  }
+});
+
+
 
 export default router;
