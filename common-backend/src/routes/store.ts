@@ -32,4 +32,33 @@ router.get("/get-requests/:storeId", async (req, res) => {
   }
 });
 
+router.put("/solve-request", async (req, res) => {
+  const receivedOtp = Number(req.body.otp);
+  const requestId = Number(req.body.requestId);
+  try {
+    const checkOtp = await prisma.customerRequests.findFirst({
+      where: {
+        requestId: requestId,
+      },
+      select: {
+        otp: true,
+      },
+    });
+    if(!checkOtp) {
+        return res.status(401).json({ message: "No such request" });
+    }
+    if (receivedOtp == checkOtp?.otp) {
+      await prisma.customerRequests.delete({
+        where: {
+          requestId: requestId,
+        },
+      });
+      return res.status(200).json({ message: "Request Attended Successfully" });
+    } else return res.status(401).json({ message: "Wrong OTP" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ messaage: "Internal Server Error" });
+  }
+});
+
 export default router;
