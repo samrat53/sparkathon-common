@@ -233,8 +233,43 @@ router.get("/locate-item", async (req, res) => {
     res.status(200).json({
       message: "matched item",
       itemLocation: itemLocation,
-    })
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+});
 
+router.get("/qr-scan", async (req, res) => {
+  const itemId = Number(req.body.itemId) || -1;
+  try {
+    const itemInfo = await prisma.item.findFirst({
+      where: {
+        itemId: itemId,
+      },
+      select: {
+        name: true,
+        price: true,
+        comparator_platform: true,
+        comparator_price: true,
+        description: true,
+        image_url: true,
+        video_link: true,
+        questions: true,
+      },
+    });
+    if (!itemInfo || !itemId) {
+      res.status(409).json({
+        message: "No such item found, or invalid itemId",
+      });
+      return;
+    }
+    res.status(200).json({
+      message: "matched item",
+      itemInfo: itemInfo,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({
