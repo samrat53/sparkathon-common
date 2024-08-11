@@ -137,7 +137,7 @@ router.post("/start-store-session", (req, res) => {
 });
 
 router.get("/category", async (req, res) => {
-  let category = req.body.category  || "";
+  let category = req.body.category || "";
   category = category.toLowerCase();
   if (!category || !category.length) {
     res.status(409).json({
@@ -194,7 +194,7 @@ router.get("/search-items", async (req, res) => {
         name: true,
         description: true,
         price: true,
-        image_url:true
+        image_url: true,
       },
     });
     if (!allItems.length) {
@@ -208,6 +208,38 @@ router.get("/search-items", async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.get("/locate-item", async (req, res) => {
+  const itemId = Number(req.body.itemId) || -1;
+  try {
+    const itemLocation = await prisma.item.findFirst({
+      where: {
+        itemId: itemId,
+      },
+      select: {
+        image_url: true,
+        item_floor: true,
+        item_location: true,
+      },
+    });
+    if (!itemLocation || !itemId) {
+      res.status(409).json({
+        message: "No such item found or invalid itemId",
+      });
+      return;
+    }
+    res.status(200).json({
+      message: "matched item",
+      itemLocation: itemLocation,
+    })
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Internal Server Error",
+    });
   }
 });
 
