@@ -2,6 +2,7 @@ import express from "express";
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
+import { extractDetails } from "../extractDetails";
 dotenv.config();
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -276,6 +277,40 @@ router.get("/qr-scan", async (req, res) => {
       message: "Internal Server Error",
     });
   }
+});
+
+router.post("/call-service", extractDetails, async (req, res) => {
+  const storeId = Number(req.storeId);
+  const userId = Number(req.userId);
+  const itemId = Number(req.body.itemId);
+  const otp = Math.floor(Math.random() * 9000 + 1000);
+  try {
+    const customer = await prisma.user.findFirst({
+      where: {
+        userId: userId,
+      },
+      select: {
+        phone: true,
+        name: true,
+      },
+    });
+    const requestCreated = await prisma.customerRequests.create({
+      data: {
+        phone: String(customer?.phone),
+        otp: otp,
+        customer_name: String(customer?.name),
+        storeId: storeId,
+        itemId: itemId,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server error" });
+  }
+  res.status(200).json({
+    message: "Created Request, Our service staff is attending you soon!",
+    otp: otp,
+  });
 });
 
 export default router;

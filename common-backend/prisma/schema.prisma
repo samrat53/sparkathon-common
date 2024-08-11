@@ -54,5 +54,6 @@ model customerRequests{
   status Boolean @default(false)
   customer_name String
   storeId Int
+  itemId Int
   time DateTime @default(now())
 }
