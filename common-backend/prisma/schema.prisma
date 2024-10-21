@@ -19,6 +19,7 @@ model user{
   phone String
   email String
   password String
+  cart Int[]
 }
 
 model store{
@@ -56,4 +57,11 @@ model customerRequests{
   storeId Int
   itemId Int
   time DateTime @default(now())
+}
+
+model orders{
+  orderId Int @id @default(autoincrement())
+  total Int
+  customerId Int
+  storeId Int
 }

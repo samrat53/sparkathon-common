@@ -44,3 +44,28 @@ export const extractDetails: RequestHandler = (req, res, next) => {
     return res.status(403).json({ message: "Invalid token" });
   }
 };
+
+export const extractUserToken: RequestHandler = (req, res, next) => {
+  const userToken = String(req.headers.usertoken);
+
+  if (!userToken) {
+    return res.status(403).json({
+      message: "User not logged in",
+    });
+  }
+
+  try {
+    const decodedUserId = jwt.verify(userToken, JWT_SECRET);
+
+    if (typeof decodedUserId !== 'string' && 'id' in decodedUserId) {
+      req.userId = decodedUserId.id as string;
+    } else {
+      throw new Error('Invalid user token');
+    }
+    
+    next();
+  } catch (error) {
+    console.log(error);
+    return res.status(403).json({ message: "Invalid token" });
+  }
+};

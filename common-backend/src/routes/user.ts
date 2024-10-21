@@ -2,7 +2,8 @@ import express from "express";
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-import { extractDetails } from "../extractDetails";
+import { extractDetails, extractUserToken } from "../extractDetails";
+import { findOrderSum } from "../findCartSum";
 dotenv.config();
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -311,6 +312,65 @@ router.post("/call-service", extractDetails, async (req, res) => {
     message: "Created Request, Our service staff is attending you soon!",
     otp: otp,
   });
+});
+
+router.post("/add-to-cart/:id", extractUserToken, async (req, res) => {
+  const userId = Number(req.userId);
+  const itemId = Number(req.params.id);
+  try {
+    await prisma.user.update({
+      where: {
+        userId: userId,
+      },
+      data: {
+        cart: {
+          push: itemId,
+        },
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "db error" });
+  }
+  res.status(200).json({
+    message: "added to cart",
+  });
+});
+
+router.get("/checkout", extractDetails, async (req, res) => {
+  const storeId = Number(req.storeId);
+  const userId = Number(req.userId);
+  try {
+    const items = await prisma.user.findFirst({
+      where: {
+        userId: userId,
+      },
+      select: {
+        cart: true,
+      },
+    });
+    if (!items) throw new Error("such items not found");
+    const totalSum = await findOrderSum(items?.cart);
+
+    const orderDetails = await prisma.orders.create({
+      data: {
+        total: totalSum,
+        customerId: userId,
+        storeId: storeId,
+      },
+      select: {
+        orderId: true,
+      },
+    });
+    res.status(200).json({
+      message: "order details generated succesfully",
+      orderId: orderDetails.orderId,
+      totalPayment: totalSum,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "db error" });
+  }
 });
 
 export default router;

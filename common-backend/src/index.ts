@@ -14,20 +14,20 @@ app.use(express.json());
 app.use(cors());
 app.use("/api/v1", rootRouter);
 
-app.post("/random", async (req, res) => {
-  const newStore = await prisma.store.create({
-    data: {
-      city: "Agartala",
-      state: "Tripura",
-      locality: "Banamalipur",
-      landmark: "Near Central Park",
-      pincode: "10001",
-      floorCategory: ["Cosmetics", "Mens wear"],
-    },
-  });
-  console.log("New store created:", newStore);
-  res.send("done");
-});
+// app.post("/random", async (req, res) => {
+//   const newStore = await prisma.store.create({
+//     data: {
+//       city: "Agartala",
+//       state: "Tripura",
+//       locality: "Banamalipur",
+//       landmark: "Near Central Park",
+//       pincode: "10001",
+//       floorCategory: ["Cosmetics", "Mens wear"],
+//     },
+//   });
+//   console.log("New store created:", newStore);
+//   res.send("done");
+// });
 
 app.listen(PORT, () => {
   console.log(`Server live at PORT ${PORT}`);
